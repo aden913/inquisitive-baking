@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        .container {
+            margin: 50px auto;
+            max-width: 600px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #515a47;
+        }
+        .summary {
+            text-align: left;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Complete Your Purchase</h1>
+    
+    <div class="summary">
+        <p><strong>Product:</strong> Baked Good 1</p>
+        <p><strong>Price:</strong> $10.00</p>
+        <p>Please click the button below to complete your purchase using PayPal.</p>
+    </div>
+    
+    <div id="paypal-button-container"></div>
+</div>
+
+<script src="https://www.paypal.com/sdk/js?client-id=AdUJ9MszmwpgXz5uHFpPrch0pmQW3OjDcEKK4zsE1y0ovXHnYEk2w3BpIf7TAUDchtpOAC34CqfHkAhA&currency=USD"></script>
+
+<script>
+    paypal.Buttons({
+        createOrder: function(data, actions) {
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value: '10.00'  // Price of the product
+                    }
+                }]
+            });
+        },
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+                alert('Transaction completed by ' + details.payer.name.given_name);
+
+                // Send purchase details to MongoDB
+                const orderDetails = {
+                    product: "Baked Good 1",
+                    price: "10.00",
+                    buyer: details.payer.name.given_name + " " + details.payer.name.surname,
+                    orderID: details.id
+                };
+
+                fetch('/submit-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderDetails)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+
+                // Redirect to a success page
+                window.location.href = '/order-success.html';
+            });
+        }
+    }).render('#paypal-button-container'); // Render the PayPal button
+</script>
+
+</body>
+</html>
