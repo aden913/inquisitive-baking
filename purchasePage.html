@@ -44,16 +44,19 @@
     
     <div id="paypal-button-container"></div>
 </div>
+<script src="https://www.paypal.com/sdk/js?client-id=AW_JId9_HqF1tjBCzLxvQY09eC3Hu9YmcDsWuUOXecIlX7CxnVoCz4mY4HdDIVxc3T19AAVCqz84by91&currency=USD"></script>
 
 <!-- PayPal SDK -->
-<script src="https://www.paypal.com/sdk/js?client-id=" + window.env.BUSINESS_CLIENT_ID + "&currency=USD"></script>
 <script>
     // Load cart data from localStorage
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
+    console.log('Cart data loaded:', cart);
 
     // Calculate total
     function calculateTotal() {
-        return cart.reduce((total, item) => total + item.price, 0).toFixed(2);
+        const total = cart.reduce((total, item) => total + item.price, 0).toFixed(2);
+        console.log('Total calculated:', total);
+        return total;
     }
 
     // Render product summary and total price
@@ -67,21 +70,27 @@
 
         // Set total price
         totalPrice.innerText = `$${calculateTotal()}`;
+        console.log('Summary rendered.');
     }
 
     // PayPal button rendering and logic
     function renderPayPalButton() {
+        console.log('Rendering PayPal button...');
         paypal.Buttons({
             createOrder: function(data, actions) {
+                console.log('Creating order...');
                 return actions.order.create({
                     purchase_units: [{
                         amount: {
                             value: calculateTotal()  // Total from cart
                         }
                     }]
+                }).catch((error) => {
+                    console.error('Error creating order:', error);
                 });
             },
             onApprove: function(data, actions) {
+                console.log('Order approved:', data);
                 return actions.order.capture().then(function(details) {
                     alert('Transaction completed by ' + details.payer.name.given_name);
 
@@ -94,6 +103,7 @@
                     };
 
                     // Save order to MongoDB
+                    console.log('Saving order to MongoDB:', orderDetails);
                     fetch('/submit-order', {
                         method: 'POST',
                         headers: {
@@ -101,16 +111,24 @@
                         },
                         body: JSON.stringify(orderDetails)
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok: ' + response.statusText);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         console.log('Order successfully submitted:', data);
+                        // Redirect to success page
+                        window.location.href = 'order-success.html';
                     })
                     .catch((error) => {
                         console.error('Error submitting order:', error);
+                        alert('There was an error submitting your order. Please try again.');
                     });
-
-                    // Redirect to success page
-                    window.location.href = '/order-success.html';
+                }).catch((error) => {
+                    console.error('Error capturing order:', error);
+                    alert('There was an error processing your payment. Please try again.');
                 });
             }
         }).render('#paypal-button-container'); // Render PayPal button
@@ -122,7 +140,6 @@
         renderPayPalButton();
     });
 </script>
-
 
 </body>
 </html>
