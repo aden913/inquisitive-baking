@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="images/favicon3_io/favicon-16x16.png" type="image/x-icon">
-
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -51,7 +51,7 @@
         <img src="images/brownies.jpg" alt="Baked Good 4">
         <h3 class="playwrite-fr-moderne-font">Brownies - 8 brownies $6</h3>
         <p class="playwrite-fr-moderne-font">Throw away your Ghiradellis brownie mix because I found a way to use their chocolate and create a moist brownie with multiple layers of chocolate flavour! Again I am by no means a fan of chocolate but this brownie with it's rich chocolate taste with a hint of buttery undertones is a hit in my book!</p>
-        <button class="purchase-btn" onclick="addToCart('Brownies', 9.00)">Add to Cart</button>
+        <button class="purchase-btn" onclick="addToCart('Brownies', 6.00)">Add to Cart</button>
     </div>
 
     <!-- Product 5: Brownie Cookies -->
@@ -59,7 +59,7 @@
         <img src="images/brownieCookies.jpg" alt="Baked Good 5">
         <h3 class="playwrite-fr-moderne-font">Brownie Cookies - 6 cookies $7</h3>
         <p class="playwrite-fr-moderne-font">Have you ever wished that when you make brownies there were more corner pieces? These cookies taste like the best corner pieces of a batch of brownies!</p>
-        <button class="purchase-btn" onclick="addToCart('Brownie Cookies', 7.50)">Add to Cart</button>
+        <button class="purchase-btn" onclick="addToCart('Brownie Cookies', 5.00)">Add to Cart</button>
     </div>
 
     <!-- Product 6: Shortbread -->
@@ -130,7 +130,8 @@ function updateCart() {
 }
 
 function proceedToPurchase() {
-    // Proceed to purchase logic here
+    // Redirect to the purchase page
+    window.location.href = 'purchasePage.html';
     console.log('Proceeding to purchase with:', cart);
 }
 

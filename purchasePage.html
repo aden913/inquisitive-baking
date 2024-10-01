@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Purchase Page</title>
+    <title>Complete Your Purchase</title>
+    <script src="config.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -35,60 +37,92 @@
     <h1>Complete Your Purchase</h1>
     
     <div class="summary">
-        <p><strong>Product:</strong> Baked Good 1</p>
-        <p><strong>Price:</strong> $10.00</p>
+        <p id="product-summary"></p>
+        <p><strong>Total Price:</strong> <span id="total-price"></span></p>
         <p>Please click the button below to complete your purchase using PayPal.</p>
     </div>
     
     <div id="paypal-button-container"></div>
 </div>
 
-<script src="https://www.paypal.com/sdk/js?client-id=AdUJ9MszmwpgXz5uHFpPrch0pmQW3OjDcEKK4zsE1y0ovXHnYEk2w3BpIf7TAUDchtpOAC34CqfHkAhA&currency=USD"></script>
-
+<!-- PayPal SDK -->
+<script src="https://www.paypal.com/sdk/js?client-id=" + window.env.BUSINESS_CLIENT_ID + "&currency=USD"></script>
 <script>
-    paypal.Buttons({
-        createOrder: function(data, actions) {
-            return actions.order.create({
-                purchase_units: [{
-                    amount: {
-                        value: '10.00'  // Price of the product
-                    }
-                }]
-            });
-        },
-        onApprove: function(data, actions) {
-            return actions.order.capture().then(function(details) {
-                alert('Transaction completed by ' + details.payer.name.given_name);
+    // Load cart data from localStorage
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-                // Send purchase details to MongoDB
-                const orderDetails = {
-                    product: "Baked Good 1",
-                    price: "10.00",
-                    buyer: details.payer.name.given_name + " " + details.payer.name.surname,
-                    orderID: details.id
-                };
+    // Calculate total
+    function calculateTotal() {
+        return cart.reduce((total, item) => total + item.price, 0).toFixed(2);
+    }
 
-                fetch('/submit-order', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(orderDetails)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Success:', data);
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
+    // Render product summary and total price
+    function renderSummary() {
+        const productSummary = document.getElementById('product-summary');
+        const totalPrice = document.getElementById('total-price');
+
+        // List cart items
+        let summaryHtml = cart.map(item => `<strong>Product:</strong> ${item.product} <br> <strong>Price:</strong> $${item.price.toFixed(2)}<br><br>`).join('');
+        productSummary.innerHTML = summaryHtml;
+
+        // Set total price
+        totalPrice.innerText = `$${calculateTotal()}`;
+    }
+
+    // PayPal button rendering and logic
+    function renderPayPalButton() {
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: calculateTotal()  // Total from cart
+                        }
+                    }]
                 });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    alert('Transaction completed by ' + details.payer.name.given_name);
 
-                // Redirect to a success page
-                window.location.href = '/order-success.html';
-            });
-        }
-    }).render('#paypal-button-container'); // Render the PayPal button
+                    // Prepare the order to be saved in MongoDB
+                    const orderDetails = {
+                        products: cart, // Products in the cart
+                        total: calculateTotal(),
+                        buyer: details.payer.name.given_name + " " + details.payer.name.surname,
+                        orderID: details.id
+                    };
+
+                    // Save order to MongoDB
+                    fetch('/submit-order', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(orderDetails)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Order successfully submitted:', data);
+                    })
+                    .catch((error) => {
+                        console.error('Error submitting order:', error);
+                    });
+
+                    // Redirect to success page
+                    window.location.href = '/order-success.html';
+                });
+            }
+        }).render('#paypal-button-container'); // Render PayPal button
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        renderSummary();
+        renderPayPalButton();
+    });
 </script>
+
 
 </body>
 </html>
