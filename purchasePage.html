@@ -65,7 +65,9 @@
         const totalPrice = document.getElementById('total-price');
 
         // List cart items
-        let summaryHtml = cart.map(item => `<strong>Product:</strong> ${item.product} <br> <strong>Price:</strong> $${item.price.toFixed(2)}<br><br>`).join('');
+        let summaryHtml = cart.map(item => 
+            `<strong>Product:</strong> ${item.product} <br> 
+             <strong>Price:</strong> $${item.price.toFixed(2)}<br><br>`).join('');
         productSummary.innerHTML = summaryHtml;
 
         // Set total price
@@ -96,10 +98,17 @@
 
                     // Prepare the order to be saved in MongoDB
                     const orderDetails = {
-                        products: cart, // Products in the cart
+                        products: cart.map(item => ({
+                            product: item.product,    // Ensure product details are sent properly
+                            price: item.price         // Send price as a number
+                        })),
                         total: calculateTotal(),
                         buyer: details.payer.name.given_name + " " + details.payer.name.surname,
-                        orderID: details.id
+                        orderID: details.id,
+                        additionalData: {
+                            paymentMethod: details.purchase_units[0].payments.captures[0].payment_method,  // Example of additional data
+                            paymentStatus: details.purchase_units[0].payments.captures[0].status            // Example of additional data
+                        }
                     };
 
                     // Save order to MongoDB
@@ -140,6 +149,7 @@
         renderPayPalButton();
     });
 </script>
+
 
 </body>
 </html>
