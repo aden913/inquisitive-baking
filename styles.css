@@ -14,12 +14,27 @@
     font-style: normal;
 }
 
+/* Hide scrollbar but still allow scrolling */
+html, body {
+    overflow: auto;
+}
+
+::-webkit-scrollbar {
+    display: none;  /* For Chrome, Safari, and Opera */
+}
+
+html {
+    -ms-overflow-style: none;  /* For Internet Explorer and Edge */
+    scrollbar-width: none;  /* For Firefox */
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: var(--light-beige);
     color: var(--dark-green);
+    min-height: 100%;
 }
 
 header {
@@ -213,6 +228,18 @@ header {
 {
     width: 8%; position:absolute; left: 10px; top:10px; border-radius: 5px;
 }
+
+footer{
+   margin:0;
+    background-color: var(--dark-green);
+    color: var(--light-beige);
+    align-items: center;
+    padding: 30px;
+}
+footer a{
+    color: var(--light-beige);
+}
+
 
 /* Media Queries */
 @media (max-width: 768px) {
