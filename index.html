@@ -15,7 +15,7 @@
 <body>
 
 <header class="playwrite-fr-moderne-font">
-    <img src="images/cakeLogo.png" style="width: 90px; position:absolute; left: 10px; top:10px; border-radius: 5px;">
+    <img src="images/cakeLogo.png" id="logo">
     Inquisitive Baking
     <i class="fa fa-shopping-cart cart-icon" style="font-size:26px;color:#d7be82" onclick="openCart()"></i>
     <span class="cart-count">0</span>
@@ -75,6 +75,7 @@
 
 <!-- Cart Sidebar -->
 <div id="cartSidebar" class="cart-sidebar">
+    <button class="close-btn" style="color:#d7be82" onclick="closeCart()">X</button>
     <h2 style="background-color: #515a47; padding:20px;margin:0; color:#d7be82;">Your Cart</h2>
     <div class="cart-items"></div>
     <div class="cart-footer">
@@ -90,54 +91,77 @@
     const proceedButton = document.getElementById('proceedButton');
     const cartOverlay = document.getElementById('cartOverlay');
 
-function openCart() {
-    cartSidebar.classList.toggle('open');
-    cartOverlay.classList.toggle('open');
-    updateCart();
-}
+    function openCart() {
+        cartSidebar.classList.toggle('open');
+        cartOverlay.classList.toggle('open');
+        updateCart();
+    }
 
-cartOverlay.addEventListener('click', () => {
-    cartSidebar.classList.remove('open');
-    cartOverlay.classList.remove('open');
-});
-
-function addToCart(product, price) {
-    cart.push({ product, price });
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCart();
-}
-
-function removeFromCart(index) {
-    cart.splice(index, 1);
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCart();
-}
-
-function updateCart() {
-    cartItems.innerHTML = '';
-    cart.forEach((item, index) => {
-        const cartItem = document.createElement('div');
-        cartItem.classList.add('cart-item');
-        cartItem.innerHTML = `
-            <span>${item.product} - $${item.price.toFixed(2)}</span>
-            <button onclick="removeFromCart(${index})">Remove</button>
-        `;
-        cartItems.appendChild(cartItem);
+    cartOverlay.addEventListener('click', () => {
+        cartSidebar.classList.remove('open');
+        cartOverlay.classList.remove('open');
     });
 
-    cartCount.textContent = cart.length;
-    proceedButton.disabled = cart.length === 0;
+    function addToCart(product, price) {
+    const existingProduct = cart.find(item => item.product === product);
+    if (existingProduct) {
+        // Increase the quantity if the product already exists
+        existingProduct.quantity += 1;
+    } else {
+        // Otherwise, add a new product with quantity 1
+        cart.push({ product, price, quantity: 1 });
+    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCart();
 }
 
-function proceedToPurchase() {
-    // Redirect to the purchase page
-    window.location.href = 'purchasePage.html';
-    console.log('Proceeding to purchase with:', cart);
+function updateQuantity(index, newQuantity) {
+    // Update the quantity of the product at the given index
+    if (newQuantity < 1) return; // Ensure the quantity stays at 1 or above
+    cart[index].quantity = parseInt(newQuantity);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCart();
 }
 
-// Initial cart update on page load
-updateCart();
+
+    function updateCart() {
+        cartItems.innerHTML = '';
+        let totalItems = 0; // Track total quantity of items
+        cart.forEach((item, index) => {
+            const cartItem = document.createElement('div');
+            cartItem.classList.add('cart-item');
+            cartItem.innerHTML = `
+                <span>${item.product} - $${item.price.toFixed(2)}</span>
+                <input type="number" value="${item.quantity}" min="1" onchange="updateQuantity(${index}, this.value)">
+                <button onclick="removeFromCart(${index})">Remove</button>
+            `;
+            cartItems.appendChild(cartItem);
+
+            // Sum the quantities of all items in the cart
+            totalItems += item.quantity;
+        });
+
+        // Update cart icon with the total quantity of all items in the cart
+        cartCount.textContent = totalItems;
+        proceedButton.disabled = cart.length === 0;
+    }
+function removeFromCart(index) {
+        cart.splice(index, 1);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCart();
+    }
+    
+
+    function proceedToPurchase() {
+        // Redirect to the purchase page
+        window.location.href = 'purchasePage.html';
+        console.log('Proceeding to purchase with:', cart);
+    }
+
+    // Initial cart update on page load
+    updateCart();
 
 </script>
+
 </body>
 </html>
