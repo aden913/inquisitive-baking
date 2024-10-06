@@ -20,14 +20,10 @@
     font-style: normal;
 }
 
-/* Hide scrollbar but still allow scrolling */
-html, body {
-    overflow: auto;
-}
 
-::-webkit-scrollbar {
-    display: none;  /* For Chrome, Safari, and Opera */
-}
+
+
+
 
 html {
     -ms-overflow-style: none;  /* For Internet Explorer and Edge */
@@ -35,12 +31,19 @@ html {
 }
 
 body {
+    overflow-y: scroll;  /* Ensures scrolling works */
+    scrollbar-width: none;  /* Hides scrollbar in Firefox */
+    -ms-overflow-style: none;  /* Hides scrollbar in IE and Edge */
+
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: var(--light-beige);
     color: var(--dark-green);
     min-height: 100%;
+}
+body::-webkit-scrollbar {
+    display: none;  /* Hides scrollbar in Chrome, Safari, and Opera */
 }
 
 header {
@@ -52,7 +55,8 @@ header {
     letter-spacing: 2px;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 1000;  /* Ensure header stays on top of content */
+    width: 100%;
 }
 
 .cart-icon {
