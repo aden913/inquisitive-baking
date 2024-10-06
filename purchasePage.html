@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="images/favicon3_io/favicon-16x16.png" type="image/x-icon">
     <title>Complete Your Purchase</title>
     <script src="config.js"></script>
 
@@ -129,9 +130,17 @@
                         return response.json();
                     })
                     .then(data => {
-                        console.log('Order successfully submitted:', data);
-                        window.location.href = 'order-success.html';
-                    })
+            console.log('Order successfully submitted:', data);
+
+            // Send email notification
+            return fetch('/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderDetails)  // Send the same order details to trigger email
+            });
+        })
                     .catch((error) => {
                         console.error('Error submitting order:', error);
                         alert('There was an error submitting your order. Please try again.');

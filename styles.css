@@ -7,6 +7,12 @@
     --deep-red: #400406;
 }
 
+.candal-regular {
+    font-family: "Candal", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+  }  
+
 .playwrite-fr-moderne-font {
     font-family: "Playwrite FR Moderne", cursive;
     font-optical-sizing: auto;

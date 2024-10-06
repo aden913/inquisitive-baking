@@ -1,0 +1,8 @@
+
+body {
+    background-image: url('images/bg.png'); /* Change the path to your image */
+    background-size: cover; /* Ensures the image covers the entire background */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+    margin: 0; /* Removes default margin */
+}
