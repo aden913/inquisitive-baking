@@ -130,17 +130,28 @@
                         return response.json();
                     })
                     .then(data => {
-            console.log('Order successfully submitted:', data);
+    console.log('Order successfully submitted:', data);
 
-            // Send email notification
-            return fetch('/send-email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(orderDetails)  // Send the same order details to trigger email
-            });
-        })
+    // Send email notification
+    return fetch('/send-email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderDetails)  // Send the same order details to trigger email
+    })
+    .then(() => {
+        // Clear the cart from localStorage and reset cart state
+        console.log('Clearing cart...');
+        localStorage.removeItem('cart');  // Clear cart from localStorage
+
+        // Optionally, clear the cart from the state or front-end logic
+        cart.length = 0; // Reset the cart array in your current context
+
+        //alert('Order completed! Your cart has been emptied.');
+        window.location.href = 'order-success.html';  // Redirect to success page
+    });
+})
                     .catch((error) => {
                         console.error('Error submitting order:', error);
                         alert('There was an error submitting your order. Please try again.');
