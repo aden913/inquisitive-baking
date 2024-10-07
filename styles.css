@@ -47,10 +47,15 @@ body::-webkit-scrollbar {
 }
 
 header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+
     background-color: var(--dark-green);
     color: var(--light-beige);
     text-align: center;
-    padding: 20px 0;
+    padding: 10px 0;
     font-size: 2.5vw;
     letter-spacing: 2px;
     position: sticky;
@@ -60,23 +65,39 @@ header {
 }
 
 .cart-icon {
-    position: absolute;
+    flex:1;
+    /*position: absolute;
     top: 50px;
-    right: 50px;
+    right: 50px;*/
     font-size: 2.5vw;
     cursor: pointer;
 }
-
+#cart{
+    flex:1;
+}
 .cart-count {
-    position: absolute;
+    /*position: absolute;
     top: 43px;
-    right: 20px;
+    right: 20px;*/
     color: var(--light-beige);
-    border-radius: 50%;
-    padding: 5px 10px;
+    
+    
     font-size: 0.5em;
 }
-
+#logo
+{
+    margin-left: 2%;
+    width: 8%;
+     /*position:absolute;
+      left: 10px; 
+      top:3px;*/
+       border-radius: 5px;
+}
+header h1 {
+    flex:3;
+     font-size: 2.5vw;
+    padding-bottom: 0;
+text-align: center;}
 .container {
     max-width: 1200px;
     margin: 20px auto;
@@ -234,10 +255,7 @@ header {
     background-color: var(--golden-brown);
 }
 
-#logo
-{
-    width: 8%; position:absolute; left: 10px; top:3px; border-radius: 5px;
-}
+
 
 footer{
    margin:0;
@@ -260,6 +278,7 @@ footer a{
     header {
         font-size: 6vw;
     }
+  header h1{font-size: 3.5vw;}
 
     .cart-sidebar {
         width: 100%;
@@ -270,21 +289,18 @@ footer a{
         top: 10px;
         right: 10px;
     }
-    .cart-count
-    {
-        top: 36%;
-        right:0%;
-    }
+    
     .cart-icon
     {
+        
+        
         font-size:7vw;
-        top: 41%;
-        right: 8%;
+        
     }
     #logo
     {
+        
         width:12vw;
-        top:26%;
-        left:2%;
+        
     }
 }
