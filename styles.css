@@ -51,7 +51,7 @@ header {
     color: var(--light-beige);
     text-align: center;
     padding: 20px 0;
-    font-size: 2em;
+    font-size: 2.5vw;
     letter-spacing: 2px;
     position: sticky;
     top: 0;
@@ -63,7 +63,7 @@ header {
     position: absolute;
     top: 50px;
     right: 50px;
-    font-size: 1.5em;
+    font-size: 2.5vw;
     cursor: pointer;
 }
 
@@ -258,7 +258,7 @@ footer a{
     }
 
     header {
-        font-size: 1.5em;
+        font-size: 6vw;
     }
 
     .cart-sidebar {
@@ -272,16 +272,19 @@ footer a{
     }
     .cart-count
     {
-        top: 33px;
-        right:3px;
+        top: 36%;
+        right:0%;
     }
     .cart-icon
     {
-        top: 36px;
-        right: 28px;
+        font-size:7vw;
+        top: 41%;
+        right: 8%;
     }
     #logo
     {
-        width:14%;
+        width:12vw;
+        top:26%;
+        left:2%;
     }
 }
