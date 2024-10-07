@@ -109,6 +109,11 @@
         updateCart();
     }
 
+    function closeCart() {
+        cartSidebar.classList.remove('open');
+        cartOverlay.classList.remove('open');
+    }
+
     cartOverlay.addEventListener('click', () => {
         cartSidebar.classList.remove('open');
         cartOverlay.classList.remove('open');
