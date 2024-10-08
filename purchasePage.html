@@ -30,6 +30,23 @@
             text-align: left;
             margin-bottom: 30px;
         }
+        .phone-field {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .phone-field label {
+            margin-right: 10px;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .phone-field input[type="tel"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -43,6 +60,12 @@
         <p>Please click the button below to complete your purchase using PayPal.</p>
     </div>
     
+    <!-- Phone Number Input Field with Label Next to Input -->
+    <div class="phone-field">
+        <label for="phone"><strong>Phone Number:</strong></label>
+        <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
+    </div>
+
     <div id="paypal-button-container"></div>
 </div>
 <script src="https://www.paypal.com/sdk/js?client-id=ASIaUxflxr0xC7L1rYGWNK9cW6mA4JMyItnCGJHnjzYxHzmkPkaNdhVApUHVX2l_tKR1U-dZ0sLLDV-L&currency=USD"></script>
@@ -97,7 +120,7 @@
                 console.log('Order approved:', data);
                 return actions.order.capture().then(function(details) {
                     alert('Transaction completed by ' + details.payer.name.given_name);
-
+                    const phone = document.getElementById('phone').value;
                     // Prepare order details for saving in MongoDB
                     const orderDetails = {
                         products: cart.map(item => ({
@@ -109,6 +132,7 @@
                         total: calculateTotal(),
                         buyer: details.payer.name.given_name + " " + details.payer.name.surname,
                         orderID: details.id,
+                        phone: phone,
                         additionalData: {
                             paymentMethod: details.purchase_units[0].payments.captures[0].payment_method,
                             paymentStatus: details.purchase_units[0].payments.captures[0].status
