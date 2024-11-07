@@ -28,6 +28,12 @@
 </div>
 </header>
 
+
+<div id="message" class="candal-regular">
+    <h3>Gluten free options now available</h3>
+    <h4>Sales will be going until April 2025</h4>
+</div>
+
 <div class="container">
     <!-- Product 1: Meringue Cookies -->
     <div class="product-box">
@@ -76,11 +82,54 @@
         <p  class="candal-regular">There's not much to say about this one. Warning if you try these you will be very disapointed to buy any store brand snickerdoodles... Everything you could ask for in a snickerdoodle cookie!</p>
         <button class="purchase-btn" onclick="addToCart('Snickerdoodles', 6.00)">Add to Cart</button>
     </div>
+
+    <!-- Product 6: Sugar Cookies -->
+    <div class="product-box">
+        <img src="images/sugar.jpg" alt="Baked Good 6">
+        <h3  class="candal-regular">Sugar Cookies $6 (6 cookies)</h3>
+        <p  class="candal-regular">I baked these one day wondering "Can sugar cookies even be 'good' I was surprised by the taste and texture of these freshly baked sugar cookies! They came out with a sugary and buttery taste and melted in my mouth. I will never eat another sugar cookie without thinking of these ones!</p>
+        <button class="purchase-btn" onclick="addToCart('Sugar Cookies', 6.00)">Add to Cart</button>
+    </div>
+
+    <!-- Product 6: Oatmeal Cookies -->
+    <div class="product-box">
+        <img src="images/oatmeal.jpg" alt="Baked Good 6">
+        <h3  class="candal-regular">Oatmeal Cookies $6 (6 cookies)</h3>
+        <p  class="candal-regular"></p>
+        <button class="purchase-btn" onclick="addToCart('Oatmeal Cookies', 6.00)">Add to Cart</button>
+    </div>
+
+    <!-- Product 6: Peanut Butter Cookies -->
+    <div class="product-box">
+        <img src="images/pbc.jpg" alt="Baked Good 6">
+        <h3  class="candal-regular">Peanut Butter Cookies $6 (6 cookies)</h3>
+        <p  class="candal-regular">I have always liked peanut butter cookies, but never had made my own. I never knew how much more i'd like them when they were made from scratch and also fresh! If you enjoy peanut butter, these cookies are a must have!</p>
+        <button class="purchase-btn" onclick="addToCart('Peanut Butter Cookies', 6.00)">Add to Cart</button>
+    </div>
 </div>
 
 <footer class="candal-regular">
-<p>This is a non-profit bake sale! All proceeds go towards funding the '2025 Japan Missions Trip' with True North Church. The website is not affiliated with True North Church.</p>
-<p>If you would like to donate to the missions trip you can do so <a href="https://churchteams.com/m/Register.asp?a=ZVZFYkY0VCtNZTA9">Here!</a></p>
+
+<div class="footer-item candal-regular">
+    <h5>Non Profit</h5>
+        <p>This is a non-profit bake sale! All proceeds go towards funding the '2025 Japan Missions Trip' with True North Church. The website is not affiliated with True North Church.</p>
+</div>
+
+<div class="footer-item candal-regular">
+    <h5>Donate</h5>
+        <p>If you would like to donate to the missions trip you can do so <a href="https://churchteams.com/m/Register.asp?a=ZVZFYkY0VCtNZTA9">Here!</a></p>
+</div>
+
+<div class="footer-item candal-regular">
+    <h5>Contact</h5>
+        <p>If you need to contact me for any reason you can reach me at 'coxaden@gmail.com'</p>
+</div>
+
+<div class="footer-item candal-regular">
+    <h5>Gluten Free</h5>
+        <p>For gluten free options please contact me directly to place the orders. For gluten free products expect a   <heavy>"3 dollar charge"</heavy>   to cover the gluten free flour substitution. Please include the address you'd like your order delivered to, phone number, and what products you would like as gluten free </p>
+</div>
+
 </footer>
 
 
@@ -95,6 +144,12 @@
     <div class="cart-footer">
         <button id="proceedButton" disabled onclick="proceedToPurchase()">Proceed to Purchase</button>
     </div>
+
+    <div id="sidebar-order-info" class="candal-regular">
+        <label>Add additional order info</label>
+        <textarea title="add order info" id="order-info-textarea"></textarea>
+    </div>
+
     <div id="sidebar-footer" class="candal-regular">
         <p>After making a purchase, your shipping details will be recieved and your order will be worked on at my soonest availability!<br>By including your phone number on the purchase page I can keep in touch with exact times and details</p>
     </div>
@@ -107,6 +162,7 @@
     const cartItems = document.querySelector('.cart-items');
     const proceedButton = document.getElementById('proceedButton');
     const cartOverlay = document.getElementById('cartOverlay');
+    const orderInfoTextarea = document.getElementById('order-info-textarea');
 
     function openCart() {
         cartSidebar.classList.toggle('open');
@@ -123,6 +179,12 @@
         cartSidebar.classList.remove('open');
         cartOverlay.classList.remove('open');
     });
+
+    orderInfoTextarea.addEventListener('input',function(){
+        localStorage.setItem('orderMessage',orderInfoTextarea.value);
+    });
+
+
 
     function addToCart(product, price) {
     const existingProduct = cart.find(item => item.product === product);

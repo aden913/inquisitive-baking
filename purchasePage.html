@@ -65,6 +65,10 @@
         <label for="phone"><strong>Phone Number:</strong></label>
         <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
     </div>
+    <div>
+        <label for="info">Additional Info:</label>
+        <p id="orderMessage"></p>
+    </div>
 
     <div id="paypal-button-container"></div>
 </div>
@@ -72,6 +76,10 @@
 <!-- PayPal sandbox SDK AW_JId9_HqF1tjBCzLxvQY09eC3Hu9YmcDsWuUOXecIlX7CxnVoCz4mY4HdDIVxc3T19AAVCqz84by91-->
 <!-- PayPal SDK -->
 <script>
+    const additionalMessage = localStorage.getItem('orderMessage') || "";
+
+    if (additionalMessage){document.getElementById('orderMessage').textContent = additionalMessage}
+
     // Load cart data from localStorage
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     console.log('Cart data loaded:', cart);
@@ -132,6 +140,7 @@
                         total: calculateTotal(),
                         buyer: details.payer.name.given_name + " " + details.payer.name.surname,
                         orderID: details.id,
+                        additionalMessage:additionalMessage,
                         phone: phone,
                         additionalData: {
                             paymentMethod: details.purchase_units[0].payments.captures[0].payment_method,
@@ -168,7 +177,7 @@
         // Clear the cart from localStorage and reset cart state
         console.log('Clearing cart...');
         localStorage.removeItem('cart');  // Clear cart from localStorage
-
+        localStorage.removeItem('orderMessage');
         // Optionally, clear the cart from the state or front-end logic
         cart.length = 0; // Reset the cart array in your current context
 
