@@ -30,22 +30,60 @@
             text-align: left;
             margin-bottom: 30px;
         }
-        .phone-field {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .field {
             margin-bottom: 20px;
+            text-align: left;
+            position: relative;
         }
-        .phone-field label {
-            margin-right: 10px;
+        .field label {
+            display: block;
+            margin-bottom: 5px;
             font-size: 16px;
-            flex-shrink: 0;
         }
-        .phone-field input[type="tel"] {
-            flex-grow: 1;
+        .field input {
+            width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+        }
+        #suggestions {
+            position: absolute;
+            width: 100%;
+            max-height: 150px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+
+        .toggle-buttons {
+            margin: 20px 0;
+        }
+        .toggle-buttons button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .toggle-buttons button.active {
+            background-color: #515a47;
+            color: white;
+        }
+        .toggle-buttons button:not(.active) {
+            background-color: #ccc;
+            color: black;
         }
     </style>
 </head>
@@ -57,154 +95,255 @@
     <div class="summary">
         <p id="product-summary"></p>
         <p><strong>Total Price:</strong> <span id="total-price"></span></p>
-        <p>Please click the button below to complete your purchase using PayPal.</p>
+        <p><strong>Delivery Fee:</strong> <span id="delivery-fee">$0.00</span></p>
+        <p><strong>Grand Total:</strong> <span id="grand-total"></span></p>
+        <p>Please complete the form below and click the button to complete your purchase using PayPal.<strong> After clicking the button, your delivery fee will be calculated and added to your total.</strong></p>
     </div>
     
-    <!-- Phone Number Input Field with Label Next to Input -->
-    <div class="phone-field">
+ <!-- Delivery Option Buttons -->
+ <div class="toggle-buttons">
+    <button id="include-delivery" class="active">Include Delivery</button>
+    <button id="exclude-delivery">Exclude Delivery</button>
+    <p>If you know Aden and you will be meeting up with him to recive the order then you can <strong>exclude the delivery fee!</strong></p>
+</div>
+
+    
+    <!-- Address Fields -->
+    <div class="field">
+        <label for="address"><strong>Street Address:</strong></label>
+        <input type="text" id="address" name="address" placeholder="Enter your street address" required>
+        <div id="suggestions"></div>
+        <span id="address-error" class="error"></span>
+    </div>
+    <div class="field">
+        <label for="city"><strong>City:</strong></label>
+        <input type="text" id="city" name="city" placeholder="Enter your city" required>
+        <span id="city-error" class="error"></span>
+    </div>
+    <div class="field">
+        <label for="state"><strong>State:</strong></label>
+        <input type="text" id="state" name="state" placeholder="Enter your state" required>
+        <span id="state-error" class="error"></span>
+    </div>
+    <div class="field">
+        <label for="zip"><strong>ZIP Code:</strong></label>
+        <input type="text" id="zip" name="zip" placeholder="Enter your ZIP code" required>
+        <span id="zip-error" class="error"></span>
+    </div>
+
+    <!-- Phone Number Input Field -->
+    <div class="field">
         <label for="phone"><strong>Phone Number:</strong></label>
         <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
-    </div>
-    <div>
-        <label for="info">Additional Info:</label>
-        <p id="orderMessage"></p>
+        <span id="phone-error" class="error"></span>
     </div>
 
     <div id="paypal-button-container"></div>
 </div>
+
 <script src="https://www.paypal.com/sdk/js?client-id=ASIaUxflxr0xC7L1rYGWNK9cW6mA4JMyItnCGJHnjzYxHzmkPkaNdhVApUHVX2l_tKR1U-dZ0sLLDV-L&currency=USD"></script>
-<!-- PayPal sandbox SDK AW_JId9_HqF1tjBCzLxvQY09eC3Hu9YmcDsWuUOXecIlX7CxnVoCz4mY4HdDIVxc3T19AAVCqz84by91-->
-<!-- PayPal SDK -->
 <script>
-    const additionalMessage = localStorage.getItem('orderMessage') || "";
-
-    if (additionalMessage){document.getElementById('orderMessage').textContent = additionalMessage}
-
-    // Load cart data from localStorage
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    console.log('Cart data loaded:', cart);
+    const baseLocation = { lat: 33.503589, lng: -81.964317 }; // Store location
+    const openCageAPIKey = "f40d361947684211b00900c459679d8f";
 
-    // Calculate total, considering the quantity of each item
+    let deliveryFee = 0;
+    let isDeliveryIncluded = true;
+
     function calculateTotal() {
-        const total = cart.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2);
-        console.log('Total calculated:', total);
-        return total;
+        return cart.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2);
     }
 
-    // Render product summary and total price
-    function renderSummary() {
-        const productSummary = document.getElementById('product-summary');
-        const totalPrice = document.getElementById('total-price');
-
-        let summaryHtml = cart.map(item => 
-            `<strong>Product:</strong> ${item.product} <br> 
-             <strong>Price:</strong> $${item.price.toFixed(2)} <br>
-             <strong>Quantity:</strong> ${item.quantity} <br> 
-             <strong>Subtotal:</strong> $${(item.price * item.quantity).toFixed(2)}<br><br>`
-        ).join('');
-        productSummary.innerHTML = summaryHtml;
-
-        totalPrice.innerText = `$${calculateTotal()}`;
-        console.log('Summary rendered.');
+    function updateTotals() {
+        const totalPrice = parseFloat(calculateTotal());
+        const grandTotal = totalPrice + (isDeliveryIncluded ? deliveryFee : 0);
+        document.getElementById('delivery-fee').innerText = `$${(isDeliveryIncluded ? deliveryFee : 0).toFixed(2)}`;
+        document.getElementById('grand-total').innerText = `$${grandTotal.toFixed(2)}`;
+    }
+    
+    async function fetchSuggestions(query) {
+        const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${openCageAPIKey}&limit=5&countrycode=US`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.results.map(result => ({
+                formatted: result.formatted,
+                geometry: result.geometry,
+                components: result.components
+            }));
+        } catch (error) {
+            console.error("Error fetching suggestions:", error);
+            return [];
+        }
     }
 
-    // PayPal button rendering and logic
-    function renderPayPalButton() {
-        console.log('Rendering PayPal button...');
-        paypal.Buttons({
-            createOrder: function(data, actions) {
-                console.log('Creating order...');
-                return actions.order.create({
-                    purchase_units: [{
-                        amount: {
-                            value: calculateTotal()  // Total from cart
-                        }
-                    }]
-                }).catch((error) => {
-                    console.error('Error creating order:', error);
-                });
-            },
-            onApprove: function(data, actions) {
-                console.log('Order approved:', data);
-                return actions.order.capture().then(function(details) {
-                    alert('Transaction completed by ' + details.payer.name.given_name);
-                    const phone = document.getElementById('phone').value;
-                    // Prepare order details for saving in MongoDB
-                    const orderDetails = {
-                        products: cart.map(item => ({
-                            product: item.product,
-                            price: item.price,
-                            quantity: item.quantity,
-                            subtotal: (item.price * item.quantity).toFixed(2)
-                        })),
-                        total: calculateTotal(),
-                        buyer: details.payer.name.given_name + " " + details.payer.name.surname,
-                        orderID: details.id,
-                        additionalMessage:additionalMessage,
-                        phone: phone,
-                        additionalData: {
-                            paymentMethod: details.purchase_units[0].payments.captures[0].payment_method,
-                            paymentStatus: details.purchase_units[0].payments.captures[0].status
-                        }
-                    };
+    async function handleAddressInput(event) {
+    const query = event.target.value;
+    if (!query) {
+        document.getElementById('suggestions').innerHTML = "";
+        return;
+    }
 
-                    console.log('Saving order to MongoDB:', orderDetails);
-                    fetch('/submit-order', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(orderDetails)
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok: ' + response.statusText);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-    console.log('Order successfully submitted:', data);
+    const suggestions = await fetchSuggestions(query);
 
-    // Send email notification
-    return fetch('/send-email', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(orderDetails)  // Send the same order details to trigger email
-    })
-    .then(() => {
-        // Clear the cart from localStorage and reset cart state
-        console.log('Clearing cart...');
-        localStorage.removeItem('cart');  // Clear cart from localStorage
-        localStorage.removeItem('orderMessage');
-        // Optionally, clear the cart from the state or front-end logic
-        cart.length = 0; // Reset the cart array in your current context
+    const suggestionsDiv = document.getElementById("suggestions");
+    suggestionsDiv.innerHTML = suggestions
+        .map(suggestion => `
+            <div class="suggestion-item" 
+                 data-lat="${suggestion.geometry.lat}" 
+                 data-lng="${suggestion.geometry.lng}" 
+                 data-address="${suggestion.formatted}">
+                ${suggestion.formatted} <!-- Display the formatted address -->
+            </div>
+        `)
+        .join("");
 
-        //alert('Order completed! Your cart has been emptied.');
-        window.location.href = 'index.html';  // Redirect 
+    document.querySelectorAll(".suggestion-item").forEach(item => {
+        item.addEventListener("click", () => {
+            const selectedAddress = item.getAttribute("data-address");
+            const components = suggestions.find(s => s.formatted === selectedAddress).components;
+
+            document.getElementById("address").value = components.house_number + ' ' + components.road || '';
+            document.getElementById("city").value = components.city || '';
+            document.getElementById("state").value = components.state || '';
+            document.getElementById("zip").value = components.postcode || '';
+            document.getElementById("suggestions").innerHTML = "";
+        });
     });
-})
-                    .catch((error) => {
-                        console.error('Error submitting order:', error);
-                        alert('There was an error submitting your order. Please try again.');
-                    });
-                }).catch((error) => {
-                    console.error('Error capturing order:', error);
-                    alert('There was an error processing your payment. Please try again.');
+}
+
+document.getElementById('address').addEventListener('input', debounce(async function(e) {
+        const query = e.target.value;
+        if (query.length > 3) {
+            const suggestions = await fetchSuggestions(query);
+            const suggestionsContainer = document.getElementById('suggestions');
+            suggestionsContainer.innerHTML = suggestions.map(item => `<div class="suggestion-item">${item.formatted}</div>`).join('');
+            suggestionsContainer.style.display = 'block';
+
+            suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.getElementById('address').value = item.textContent;
+                    suggestionsContainer.innerHTML = '';
+                    updateAddressFields(item.textContent);
                 });
-            }
-        }).render('#paypal-button-container');
+            });
+        } else {
+            document.getElementById('suggestions').innerHTML = '';
+        }
+    }, 500));
+
+    async function updateAddressFields(address) {
+        const query = `${address}, ${document.getElementById('city').value}, ${document.getElementById('state').value}, ${document.getElementById('zip').value}`;
+        const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${openCageAPIKey}`);
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+            const components = data.results[0].components;
+            document.getElementById('address').value = components.house_number + ' ' + components.road || '';
+            document.getElementById('city').value = components.city || '';
+            document.getElementById('state').value = components.state || '';
+            document.getElementById('zip').value = components.postcode || '';
+        }
     }
 
-    // Initialize the page
+    document.getElementById('include-delivery').addEventListener('click', async () => {
+        isDeliveryIncluded = true;
+        document.getElementById('include-delivery').classList.add('active');
+        document.getElementById('exclude-delivery').classList.remove('active');
+        deliveryFee = await calculateDeliveryFee();
+        updateTotals();
+        document.getElementById('address-fields').style.display = 'block';
+    });
+
+    document.getElementById('exclude-delivery').addEventListener('click', () => {
+        isDeliveryIncluded = false;
+        document.getElementById('exclude-delivery').classList.add('active');
+        document.getElementById('include-delivery').classList.remove('active');
+        deliveryFee = 0;
+        updateTotals();
+        document.getElementById('address-fields').style.display = 'none';
+    });
+
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    function calculateTotal() {
+        return cart.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2);
+    }
+
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+        const toRad = (value) => value * Math.PI / 180;
+        const R = 3958.8; // Radius of Earth in miles
+        const dLat = toRad(lat2 - lat1);
+        const dLng = toRad(lng2 - lng1);
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    async function calculateDeliveryFee() {
+        const address = document.getElementById('address').value;
+        const city = document.getElementById('city').value;
+        const state = document.getElementById('state').value;
+        const zip = document.getElementById('zip').value;
+
+        const fullAddress = `${address}, ${city}, ${state}, ${zip}`;
+        const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(fullAddress)}&key=${openCageAPIKey}`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+                const { lat, lng } = data.results[0].geometry;
+                const distance = calculateDistance(baseLocation.lat, baseLocation.lng, lat, lng);
+                const deliveryFee = Math.ceil(distance / 15) * 4;
+                return deliveryFee;
+            } else {
+                alert("Unable to calculate delivery fee. Please check your address.");
+                return 0;
+            }
+        } catch (error) {
+            console.error("Error fetching geolocation data:", error);
+            alert("An error occurred while calculating delivery fee.");
+            return 0;
+        }
+    }
+
+    async function renderPayPalButton() {
+    paypal.Buttons({
+        createOrder: async function(data, actions) {
+            const deliveryFee = isDeliveryIncluded ? await calculateDeliveryFee() : 0; // Adjust based on delivery option
+            const grandTotal = parseFloat(calculateTotal()) + deliveryFee;
+
+            // Update UI with the correct delivery fee and grand total
+            document.getElementById('delivery-fee').innerText = `$${deliveryFee.toFixed(2)}`;
+            document.getElementById('grand-total').innerText = `$${grandTotal.toFixed(2)}`;
+
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value: grandTotal.toFixed(2)
+                    }
+                }]
+            });
+        },
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+                alert('Thank you for your purchase!');
+                localStorage.removeItem('cart');
+                window.location.href = 'index.html';
+            });
+        }
+    }).render('#paypal-button-container');
+}
+
     document.addEventListener('DOMContentLoaded', function() {
-        renderSummary();
+        document.getElementById('total-price').innerText = `$${calculateTotal()}`;
         renderPayPalButton();
     });
 </script>
-
-
-
 </body>
 </html>
