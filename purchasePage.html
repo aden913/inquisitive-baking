@@ -163,126 +163,117 @@
 
 <script src="https://www.paypal.com/sdk/js?client-id=ASIaUxflxr0xC7L1rYGWNK9cW6mA4JMyItnCGJHnjzYxHzmkPkaNdhVApUHVX2l_tKR1U-dZ0sLLDV-L&currency=USD"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDG_wrc3TcwUBLA6cBLVXN6KdQK6-R37fg&libraries=places"></script>
-    </script>
 
-    <script>
-        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-        const baseLocation = { lat: 33.503589, lng: -81.964317 }; // Store location
-        const googleAPIKey = "AIzaSyDG_wrc3TcwUBLA6cBLVXN6KdQK6-R37fg";
+<script>
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+    const baseLocation = { lat: 33.503589, lng: -81.964317 }; // Store location
+    const googleAPIKey = "AIzaSyDG_wrc3TcwUBLA6cBLVXN6KdQK6-R37fg";
     
-        let deliveryFee = 0;
-        let isDeliveryIncluded = true;
+    let deliveryFee = 0;
+    let isDeliveryIncluded = true;
     
-        function calculateTotal() {
-            return cart.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2);
-        }
+    function calculateTotal() {
+        return cart.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2);
+    }
     
-        function updateTotals() {
-            const totalPrice = parseFloat(calculateTotal());
-            const grandTotal = totalPrice + (isDeliveryIncluded ? deliveryFee : 0);
-            document.getElementById('delivery-fee').innerText = `$${(isDeliveryIncluded ? deliveryFee : 0).toFixed(2)}`;
-            document.getElementById('grand-total').innerText = `$${grandTotal.toFixed(2)}`;
-        }
+    function updateTotals() {
+        const totalPrice = parseFloat(calculateTotal());
+        const grandTotal = totalPrice + (isDeliveryIncluded ? deliveryFee : 0);
+        document.getElementById('total-price').innerText = `$${totalPrice.toFixed(2)}`;
+        document.getElementById('delivery-fee').innerText = `$${(isDeliveryIncluded ? deliveryFee : 0).toFixed(2)}`;
+        document.getElementById('grand-total').innerText = `$${grandTotal.toFixed(2)}`;
+    }
     
-        function validateFields() {
-            let isValid = true;
-            const fields = ['address', 'city', 'state', 'zip', 'phone'];
-            fields.forEach(field => {
-                const value = document.getElementById(field).value.trim();
-                if (!value) {
-                    document.getElementById(`${field}-error`).innerText = `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`;
-                    isValid = false;
-                } else {
-                    document.getElementById(`${field}-error`).innerText = '';
-                }
-            });
-            return isValid;
-        }
-    
-        function initAutocomplete() {
-            const input = document.getElementById('address');
-            const options = {
-                types: ['address'],
-                componentRestrictions: { country: 'US' },
-                fields: ['place_id', 'geometry', 'formatted_address', 'address_components']
-            };
-    
-            const autocomplete = new google.maps.places.Autocomplete(input, options);
-    
-            autocomplete.addListener('place_changed', async () => {
-                const place = autocomplete.getPlace();
-                if (!place.geometry) return;
-    
-                // Extract the relevant address components
-                const addressComponents = place.address_components;
-                let streetAddress = '';
-                let city = '';
-                let state = '';
-                let zip = '';
-    
-                // Loop through address components and get the necessary fields
-                addressComponents.forEach(comp => {
-                    const types = comp.types;
-                    if (types.includes("street_number") || types.includes("route")) {
-                        streetAddress += comp.long_name + ' ';
-                    } else if (types.includes("locality")) {
-                        city = comp.long_name;
-                    } else if (types.includes("administrative_area_level_1")) {
-                        state = comp.long_name;
-                    } else if (types.includes("postal_code")) {
-                        zip = comp.long_name;
-                    }
-                });
-    
-                // Trim the street address to remove extra spaces
-                streetAddress = streetAddress.trim();
-    
-                // Update the address input fields
-                document.getElementById('address').value = streetAddress;
-                document.getElementById('city').value = city || 'Greenwood';  // Default to 'Greenwood' if no city found
-                document.getElementById('state').value = state || '';
-                document.getElementById('zip').value = zip || '';
-    
-                // Update geolocation based on selected place
-                const { lat, lng } = place.geometry.location;
-                const distance = google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(lat, lng), new google.maps.LatLng(baseLocation.lat, baseLocation.lng));
-                deliveryFee = distance < 1000 ? 0 : 5.00;
-    
-                // Update totals and display the delivery fee immediately
-                document.getElementById('delivery-fee').innerText = `$${deliveryFee.toFixed(2)}`;
-                updateTotals();
-            });
-        }
-    
-        // Delivery toggle buttons
-        document.getElementById('include-delivery').addEventListener('click', () => {
-            isDeliveryIncluded = true;
-            document.getElementById('include-delivery').classList.add('active');
-            document.getElementById('exclude-delivery').classList.remove('active');
-            updateTotals();
-        });
-    
-        document.getElementById('exclude-delivery').addEventListener('click', () => {
-            isDeliveryIncluded = false;
-            document.getElementById('exclude-delivery').classList.add('active');
-            document.getElementById('include-delivery').classList.remove('active');
-            updateTotals();
-        });
-    
-        // Validate button
-        document.getElementById('validate-button').addEventListener('click', () => {
-            if (validateFields()) {
-                document.getElementById('paypal-button-container').style.display = 'block';
-                document.getElementById('validate-button').style.display = 'none';
-                const inputs = document.querySelectorAll('input, textarea, select');
-                inputs.forEach(input => input.disabled = true);
+    function validateFields() {
+        let isValid = true;
+        const fields = ['address', 'city', 'state', 'zip', 'phone'];
+        fields.forEach(field => {
+            const value = document.getElementById(field).value.trim();
+            if (!value) {
+                document.getElementById(`${field}-error`).innerText = `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`;
+                isValid = false;
+            } else {
+                document.getElementById(`${field}-error`).innerText = '';
             }
         });
+        return isValid;
+    }
     
-        initAutocomplete();
+    function initAutocomplete() {
+        const input = document.getElementById('address');
+        const options = {
+            types: ['address'],
+            componentRestrictions: { country: 'US' },
+            fields: ['place_id', 'geometry', 'formatted_address', 'address_components']
+        };
+    
+        const autocomplete = new google.maps.places.Autocomplete(input, options);
+    
+        autocomplete.addListener('place_changed', async () => {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) return;
+    
+            const addressComponents = place.address_components;
+            let streetAddress = '';
+            let city = '';
+            let state = '';
+            let zip = '';
+    
+            addressComponents.forEach(comp => {
+                const types = comp.types;
+                if (types.includes("street_number") || types.includes("route")) {
+                    streetAddress += comp.long_name + ' ';
+                } else if (types.includes("locality")) {
+                    city = comp.long_name;
+                } else if (types.includes("administrative_area_level_1")) {
+                    state = comp.long_name;
+                } else if (types.includes("postal_code")) {
+                    zip = comp.long_name;
+                }
+            });
+    
+            streetAddress = streetAddress.trim();
+    
+            document.getElementById('address').value = streetAddress;
+            document.getElementById('city').value = city || 'Greenwood'; 
+            document.getElementById('state').value = state || '';
+            document.getElementById('zip').value = zip || '';
+    
+            const { lat, lng } = place.geometry.location;
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(lat, lng), new google.maps.LatLng(baseLocation.lat, baseLocation.lng));
+            deliveryFee = distance < 1000 ? 0 : 5.00;
+    
+            document.getElementById('delivery-fee').innerText = `$${deliveryFee.toFixed(2)}`;
+            updateTotals();
+        });
+    }
+    
+    document.getElementById('include-delivery').addEventListener('click', () => {
+        isDeliveryIncluded = true;
+        document.getElementById('include-delivery').classList.add('active');
+        document.getElementById('exclude-delivery').classList.remove('active');
         updateTotals();
-    </script>
+    });
     
+    document.getElementById('exclude-delivery').addEventListener('click', () => {
+        isDeliveryIncluded = false;
+        document.getElementById('exclude-delivery').classList.add('active');
+        document.getElementById('include-delivery').classList.remove('active');
+        updateTotals();
+    });
+    
+    document.getElementById('validate-button').addEventListener('click', () => {
+        if (validateFields()) {
+            document.getElementById('paypal-button-container').style.display = 'block';
+            document.getElementById('validate-button').style.display = 'none';
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => input.disabled = true);
+        }
+    });
+    
+    initAutocomplete();
+    updateTotals();
+</script>
 
 </body>
 </html>
