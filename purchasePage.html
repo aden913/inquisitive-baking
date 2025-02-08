@@ -162,7 +162,9 @@
 </div>
 
 <script src="https://www.paypal.com/sdk/js?client-id=ASIaUxflxr0xC7L1rYGWNK9cW6mA4JMyItnCGJHnjzYxHzmkPkaNdhVApUHVX2l_tKR1U-dZ0sLLDV-L&currency=USD"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDG_wrc3TcwUBLA6cBLVXN6KdQK6-R37fg&libraries=places"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDG_wrc3TcwUBLA6cBLVXN6KdQK6-R37fg&libraries=geometry,places&callback=initAutocomplete" async defer></script>
+
+
 <script>
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const baseLocation = { lat: 33.503589, lng: -81.964317 }; // Store location
@@ -197,37 +199,68 @@
                 document.getElementById(`${field}-error`).innerText = '';
             }
         });
-
+        console.log('1:', deliveryFee);
         if (isValid && isDeliveryIncluded) {
             calculateDeliveryFee();
+            console.log('2:', deliveryFee);
         }
         
         return isValid;
     }
 
     function calculateDeliveryFee() {
-        const address = document.getElementById('address').value.trim();
-        if (!address) {
+        const streetAddress = document.getElementById('address').value.trim();
+        const city = document.getElementById('city').value.trim();
+        const state = document.getElementById('state').value.trim();
+        const zip = document.getElementById('zip').value.trim();
+
+        // Construct the full address
+        const fullAddress = `${streetAddress}, ${city}, ${state} ${zip}`;
+        
+        if (!fullAddress) {
             deliveryFee = 0;
             updateTotals();
             return;
         }
 
         const geocoder = new google.maps.Geocoder();
-        geocoder.geocode({ address }, (results, status) => {
+        geocoder.geocode({ address: fullAddress }, (results, status) => {
+            console.log('Geocoding results:', results); // Log the entire results object
+            console.log("Address sent to backend:", fullAddress);
+
             if (status === "OK") {
                 const location = results[0].geometry.location;
+                const lat = location.lat();  // Use lat() method
+                const lng = location.lng();  // Use lng() method
+
+                // Debugging: Log the lat and lng values
+                console.log("Geocoded Location (Lat, Lng):", lat, lng);
+
+                // Create LatLng objects
+                const userLocation = new google.maps.LatLng(lat, lng);
+                const baseLocationLatLng = new google.maps.LatLng(baseLocation.lat, baseLocation.lng);
+
+                // Debugging: Log the lat() and lng() methods explicitly to extract values
+                console.log("User Location (Lat, Lng):", userLocation.lat(), userLocation.lng());
+                console.log("Base Location (Lat, Lng):", baseLocationLatLng.lat(), baseLocationLatLng.lng());
+
+                // Calculate the distance between the two locations in meters
                 const distanceMeters = google.maps.geometry.spherical.computeDistanceBetween(
-                    new google.maps.LatLng(location.lat(), location.lng()),
-                    new google.maps.LatLng(baseLocation.lat, baseLocation.lng)
+                    userLocation,
+                    baseLocationLatLng
                 );
 
-                const distanceMiles = distanceMeters / 1609.34; // Convert meters to miles
+                // Debugging: Log the distance
+                console.log("Distance (in meters):", distanceMeters);
 
-                // Calculate the fee: $5 base fee + $5 for every additional 25 miles
-                deliveryFee = 5 + Math.floor(distanceMiles / 25) * 5;
+                // Calculate the fee: $5 base fee + $5 for every 40,000 meters
+                deliveryFee = 5 + Math.floor(distanceMeters / 40000) * 5;
+
+                // Debugging: Log the calculated delivery fee
+                console.log("Calculated Delivery Fee: $" + deliveryFee);
             } else {
                 deliveryFee = 0; // Default to zero if geocoding fails
+                console.log("Geocoding failed. Delivery Fee set to 0.");
             }
 
             updateTotals(); // Ensure the grand total updates
