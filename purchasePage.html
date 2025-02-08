@@ -185,69 +185,120 @@
     }
     
     function validateFields() {
-        let isValid = true;
-        const fields = ['address', 'city', 'state', 'zip', 'phone'];
-        fields.forEach(field => {
-            const value = document.getElementById(field).value.trim();
-            if (!value) {
-                document.getElementById(`${field}-error`).innerText = `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`;
-                isValid = false;
-            } else {
-                document.getElementById(`${field}-error`).innerText = '';
+    let isValid = true;
+    const fields = ['address', 'city', 'state', 'zip', 'phone'];
+    fields.forEach(field => {
+        const value = document.getElementById(field).value.trim();
+        if (!value) {
+            document.getElementById(`${field}-error`).innerText = `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`;
+            isValid = false;
+        } else {
+            document.getElementById(`${field}-error`).innerText = '';
+        }
+    });
+
+    if (isValid) {
+        calculateDeliveryFee(); // Ensure delivery fee is updated
+    }
+    
+    return isValid;
+}
+    
+function calculateDeliveryFee() {
+    const address = document.getElementById('address').value;
+    
+    if (!address) {
+        deliveryFee = 0;
+        updateTotals();
+        return;
+    }
+
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ address }, (results, status) => {
+        if (status === "OK") {
+            const location = results[0].geometry.location;
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(
+                new google.maps.LatLng(location.lat(), location.lng()),
+                new google.maps.LatLng(baseLocation.lat, baseLocation.lng)
+            );
+
+            // Adjust based on your delivery cost rules
+            deliveryFee = distance < 1000 ? 0 : 5.00;
+        } else {
+            deliveryFee = 0; // Default to zero if geocoding fails
+        }
+
+        updateTotals();
+    });
+}
+
+
+
+function initAutocomplete() {
+    const input = document.getElementById('address');
+    const options = {
+        types: ['address'],
+        componentRestrictions: { country: 'US' },
+        fields: ['place_id', 'geometry', 'formatted_address', 'address_components']
+    };
+
+    const autocomplete = new google.maps.places.Autocomplete(input, options);
+
+    autocomplete.addListener('place_changed', async () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry) return;
+
+        const addressComponents = place.address_components;
+        let streetAddress = '';
+        let city = '';
+        let state = '';
+        let zip = '';
+
+        addressComponents.forEach(comp => {
+            const types = comp.types;
+            if (types.includes("street_number") || types.includes("route")) {
+                streetAddress += comp.long_name + ' ';
+            } else if (types.includes("locality")) {
+                city = comp.long_name;
+            } else if (types.includes("administrative_area_level_1")) {
+                state = comp.long_name;
+            } else if (types.includes("postal_code")) {
+                zip = comp.long_name;
             }
         });
-        return isValid;
-    }
-    
-    function initAutocomplete() {
-        const input = document.getElementById('address');
-        const options = {
-            types: ['address'],
-            componentRestrictions: { country: 'US' },
-            fields: ['place_id', 'geometry', 'formatted_address', 'address_components']
-        };
-    
-        const autocomplete = new google.maps.places.Autocomplete(input, options);
-    
-        autocomplete.addListener('place_changed', async () => {
-            const place = autocomplete.getPlace();
-            if (!place.geometry) return;
-    
-            const addressComponents = place.address_components;
-            let streetAddress = '';
-            let city = '';
-            let state = '';
-            let zip = '';
-    
-            addressComponents.forEach(comp => {
-                const types = comp.types;
-                if (types.includes("street_number") || types.includes("route")) {
-                    streetAddress += comp.long_name + ' ';
-                } else if (types.includes("locality")) {
-                    city = comp.long_name;
-                } else if (types.includes("administrative_area_level_1")) {
-                    state = comp.long_name;
-                } else if (types.includes("postal_code")) {
-                    zip = comp.long_name;
-                }
-            });
-    
-            streetAddress = streetAddress.trim();
-    
-            document.getElementById('address').value = streetAddress;
-            document.getElementById('city').value = city || 'Greenwood'; 
-            document.getElementById('state').value = state || '';
-            document.getElementById('zip').value = zip || '';
-    
-            const { lat, lng } = place.geometry.location;
-            const distance = google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(lat, lng), new google.maps.LatLng(baseLocation.lat, baseLocation.lng));
-            deliveryFee = distance < 1000 ? 0 : 5.00;
-    
-            document.getElementById('delivery-fee').innerText = `$${deliveryFee.toFixed(2)}`;
-            updateTotals();
-        });
-    }
-    
+
+        streetAddress = streetAddress.trim();
+
+        document.getElementById('address').value = streetAddress;
+        document.getElementById('city').value = city || 'Greenwood';
+        document.getElementById('state').value = state || '';
+        document.getElementById('zip').value = zip || '';
+
+        const { lat, lng } = place.geometry.location;
+        const distance = google.maps.geometry.spherical.computeDistanceBetween(
+            new google.maps.LatLng(lat, lng),
+            new google.maps.LatLng(baseLocation.lat, baseLocation.lng)
+        );
+
+        // Updated delivery fee calculation
+        if (distance < 1000) {
+            deliveryFee = 0; // No charge for very close locations
+        } else {
+            deliveryFee = 5 + Math.floor(distance / 40233) * 5; // $5 base fee + $5 for every 25 miles
+        }
+
+        document.getElementById('delivery-fee').innerText = `$${deliveryFee.toFixed(2)}`;
+        updateTotals();
+    });
+}
+
+
+
+    document.getElementById('address').addEventListener('input', () => {
+    deliveryFee = 0;
+    updateTotals();
+});
+
     document.getElementById('include-delivery').addEventListener('click', () => {
         isDeliveryIncluded = true;
         document.getElementById('include-delivery').classList.add('active');
@@ -263,13 +314,37 @@
     });
     
     document.getElementById('validate-button').addEventListener('click', () => {
-        if (validateFields()) {
-            document.getElementById('paypal-button-container').style.display = 'block';
-            document.getElementById('validate-button').style.display = 'none';
-            const inputs = document.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => input.disabled = true);
-        }
-    });
+    if (validateFields()) {
+        calculateDeliveryFee(); // Ensure fee is calculated after validation
+        
+        document.getElementById('paypal-button-container').style.display = 'block';
+        document.getElementById('validate-button').style.display = 'none';
+        
+        const inputs = document.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => input.disabled = true);
+
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                const total = parseFloat(document.getElementById('grand-total').innerText.replace('$', ''));
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: { value: total.toFixed(2) }
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    alert('Transaction completed by ' + details.payer.name.given_name);
+                });
+            },
+            onError: function(err) {
+                console.error(err);
+                alert('Something went wrong with the payment. Please try again.');
+            }
+        }).render('#paypal-button-container');
+    }
+});
+
     
     initAutocomplete();
     updateTotals();
