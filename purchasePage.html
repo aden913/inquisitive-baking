@@ -370,7 +370,9 @@
             }).render('#paypal-button-container');
         }
     });
-
+    window.onload = function() {
+        updateTotals();  // Call updateTotals to display total when the page loads
+    };
     initAutocomplete();
     updateTotals();
 </script>
